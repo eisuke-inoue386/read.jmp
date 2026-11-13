@@ -1,7 +1,7 @@
 # Validation record
 
 Initial validation: 2026-10-21 (Asia/Tokyo).
-Publication check: 2026-11-13 (Asia/Tokyo), read.jmp 0.5.1.
+Publication check: 2026-11-13 (Asia/Tokyo), read.jmp 0.5.2.
 
 - The renamed package passes all six test scripts and `R CMD check --no-manual`.
 - `read.jmp()` matches the legacy readers for both JMP and supported JRP input.
@@ -9,6 +9,14 @@ Publication check: 2026-11-13 (Asia/Tokyo), read.jmp 0.5.1.
   byte-for-byte; legacy `jmp2r.R` remains usable without installation.
 - Standalone tests verify external-reference and dynamic-JRP rejection through
   the new `read.jmp()` entry point.
+
+## Empty character cells
+
+- The public compact-string fixture and synthetic JRP inputs cover default NA
+  conversion, explicit order, all-empty factors, opt-out, repeat conversion,
+  declared missing codes, and empty display labels on nonmissing codes.
+- In the private 137-row table, six empty stored cells in the reported character
+  column now become NA; nonempty values and row counts are unchanged.
 
 ## Additional binary layouts
 

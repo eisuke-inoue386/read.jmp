@@ -37,7 +37,10 @@ Set FALSE explicitly to retain all stored rows. Hidden or selected rows alone
 are not removed. Original source bytes, when kept, still contain all rows.}
 \item{...}{Arguments passed to \code{read_jmp()} or \code{read_jrp()}.}
 \item{missing_codes}{Convert known JMP missing codes to \code{NA} before factor
-conversion (default TRUE). Set FALSE to retain the codes as values.}
+conversion (default TRUE). Empty stored character cells are also converted
+to NA and removed from factor levels. Whitespace and literal "NA"/"." are
+retained unless declared as missing codes. Set FALSE to retain codes and
+empty strings as values.}
 \item{factors}{Convert nominal columns to factors and ordinal columns to ordered
 factors (default TRUE), using supported value labels. Set FALSE to retain values.}
 \item{ordinal_order}{When JMP has no explicit category order: \code{"sort"}

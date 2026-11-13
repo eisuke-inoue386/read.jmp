@@ -89,7 +89,7 @@
   if (is.null(result$table)) result$table <- list()
   result <- .jmp_filter_rows(result, exclude_rows)
   result$source <- list(file = basename(path), size = length(bytes),
-                        reader = "read.jmp", version = "0.5.1", backend = "base-R")
+                        reader = "read.jmp", version = "0.5.2", backend = "base-R")
   if (keep_source) result$source$bytes <- bytes
   class(result) <- "jmp_dataset"
   converted <- .jmp_analysis_result(result, FALSE, missing_codes, factors, ordinal_order)
@@ -258,6 +258,9 @@ as_analysis_data <- function(x, exclude_rows = FALSE, missing_codes = FALSE,
         .jmp_abort(paste0("Missing-value definitions are unavailable for column '",
                            names(d)[i], "'."), "jmp_metadata_error")
       codes <- m$missing_value_codes
+      # Empty stored character cells are missing for analysis. Do this before
+      # applying labels, which may legitimately display a nonempty code as "".
+      if (is.character(stored)) codes <- c(codes, "")
       if (length(codes)) {
         code_values <- stored
         if (!is.null(m$raw_values)) {
@@ -305,8 +308,11 @@ as_analysis_data <- function(x, exclude_rows = FALSE, missing_codes = FALSE,
             else "No explicit JMP category order; ordered factor uses first appearance in the returned data.",
             stringsAsFactors = FALSE))
         }
-        if (isTRUE(m$missing_codes_applied) && length(m$missing_value_codes))
-          lev <- lev[!lev %in% m$missing_value_codes]
+        if (isTRUE(m$missing_codes_applied)) {
+          codes <- m$missing_value_codes
+          if (is.character(stored)) codes <- c(codes, "")
+          lev <- lev[!lev %in% codes]
+        }
         if (anyNA(lev) || anyDuplicated(lev))
           .jmp_abort("Category levels must be unique and non-missing.", "jmp_metadata_error")
         observed <- unique(values[!is.na(values)])

@@ -9,7 +9,7 @@ Read supported JMP `.jmp` tables directly in R without JMP, Python, Julia or
 additional R packages. A restricted `.jrp` reader accepts literal embedded
 values without executing JSL. R 4.1 or newer is required.
 
-**Experimental 0.5.1.** Supported layouts are tested; this is not a universal
+**Experimental 0.5.2.** Supported layouts are tested; this is not a universal
 JMP reader or a lossless reproduction of JMP's settings. See
 [日本語の説明](README.ja.md), [validation](VALIDATION.md) and
 [publication instructions](PUBLISHING.md).
@@ -115,8 +115,10 @@ warnings about unsupported settings.
 The binary reader supports tested numeric/integer and UTF-8 character layouts,
 including supported compressed columns. It handles known date/time formats,
 value labels, modeling types, literal missing codes/category order, and the
-recognized table row-state directory. Empty strings remain empty unless
-explicitly defined as missing codes. Int64 values use exact decimal strings.
+recognized table row-state directory. Empty character cells become `NA` by default, before factor conversion.
+Use `missing_codes = FALSE` to retain empty strings and declared missing codes.
+Whitespace-only strings and literal `"NA"`/`"."` are retained unless explicitly
+declared as missing codes. Int64 values use exact decimal strings.
 Datetime timezone is unknown; UTC is only a display convention. Display-format
 codes are not rendered as JMP would display them. Row-state columns are
 separate from the table's row exclusion flags.
@@ -146,8 +148,8 @@ result <- read.jmp("my-data.jmp")
 ```
 
 Local source archives can be installed with
-`install.packages("read.jmp_0.5.1.tar.gz", repos = NULL, type = "source")`.
-The separately built Windows binary is `read.jmp_0.5.1.zip` (`type = "win.binary"`).
+`install.packages("read.jmp_0.5.2.tar.gz", repos = NULL, type = "source")`.
+The separately built Windows binary is `read.jmp_0.5.2.zip` (`type = "win.binary"`).
 `read.jmp-source.zip` is a source-folder archive, not an installable Windows binary.
 Package examples using `system.file(..., package = "read.jmp")` require installation.
 
@@ -155,7 +157,7 @@ Package examples using `system.file(..., package = "read.jmp")` require installa
 
 ```sh
 R CMD build .
-R CMD check --no-manual read.jmp_0.5.1.tar.gz
+R CMD check --no-manual read.jmp_0.5.2.tar.gz
 ```
 
 Tests use base R. CI checks the package and standalone file on Windows, macOS

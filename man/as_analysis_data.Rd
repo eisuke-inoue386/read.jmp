@@ -11,7 +11,8 @@ as_analysis_data(x, exclude_rows = FALSE, missing_codes = FALSE,
 \item{x}{A detailed \code{jmp_dataset}, or a data frame when no additional
 conversions are requested.}
 \item{exclude_rows}{Remove rows whose known exclusion flag is true.}
-\item{missing_codes}{Convert explicitly declared missing value codes to NA.}
+\item{missing_codes}{Convert explicitly declared missing value codes and empty stored character
+cells to NA. Whitespace and literal "NA"/"." are retained unless declared missing.}
 \item{factors}{Convert nominal columns to factors and ordinal columns to ordered
 factors. Explicit JMP Value Order takes precedence.}
 \item{ordinal_order}{Fallback for ordinal columns without a declared order:

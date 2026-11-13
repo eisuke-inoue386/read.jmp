@@ -1,3 +1,13 @@
+# read.jmp 0.5.2
+
+- Convert empty stored character cells to NA by default before factor conversion,
+  including removal from explicit category orders. `missing_codes = FALSE`
+  retains empty strings. Literal "NA", "." and whitespace are not guessed missing.
+- Preserve original values in detailed metadata and keep empty display labels
+  for genuine nonmissing codes. Repeat conversion preserves missing values.
+- Add binary/JRP regression tests for empty cells, explicit order, opt-out,
+  all-empty columns and value labels.
+
 # read.jmp 0.5.1
 
 - Read row exclusions when bounded optional table-header blocks 1 and 15

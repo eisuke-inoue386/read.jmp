@@ -73,4 +73,41 @@ for (args in list(list(missing_codes = NA), list(factors = 1))) {
   e <- tryCatch(do.call(read_jmp, c(list(path = p), args)), error = identity)
   stopifnot(inherits(e, "jmp_argument_error"))
 }
+# Empty character cells become NA before factors, including explicit orders.
+text_empty <- paste0('New Table("empty strings", ',
+ 'New Column("group", Character, "Nominal", Values({"a","","NA"," ","."})),',
+ 'New Column("rank", Character, "Ordinal", Set Property("Value Order", {"b","","a","unknown"}),',
+ 'Set Property("Missing Value Codes", {"unknown"}), Values({"a","","b","unknown","a"})))')
+x <- read_text(text_empty)
+stopifnot(is.factor(x$data$group), is.na(x$data$group[2]),
+          identical(as.character(x$data$group), c("a",NA,"NA"," ",".")),
+          !"" %in% levels(x$data$group), is.ordered(x$data$rank),
+          identical(levels(x$data$rank), c("b","a")),
+          identical(which(is.na(x$data$rank)), c(2L,4L)),
+          identical(x$columns$group$stored_values, c("a","","NA"," ",".")),
+          is.null(x$columns$group$missing_value_codes),
+          identical(as_analysis_data(x, missing_codes = TRUE, factors = TRUE), x$data),
+          identical(as_analysis_data(x, factors = TRUE), x$data))
+plain <- read_text(text_empty, factors = FALSE)
+stopifnot(is.character(plain$data$group), is.na(plain$data$group[2]))
+raw <- read_text(text_empty, missing_codes = FALSE, factors = FALSE)
+stopifnot(identical(raw$data$group, c("a","","NA"," ",".")),
+          identical(as_analysis_data(raw, missing_codes = TRUE, factors = TRUE), x$data))
+retained <- read_text(text_empty, missing_codes = FALSE)
+stopifnot("" %in% levels(retained$data$group), !anyNA(retained$data$group),
+          "" %in% levels(retained$data$rank))
+all_empty <- read_text('New Table("empty", New Column("x", Character, "Ordinal", Values({"",""})))')
+stopifnot(is.ordered(all_empty$data$x), all(is.na(all_empty$data$x)), nlevels(all_empty$data$x) == 0L)
+# Empty display labels for genuine codes must remain legitimate factor labels.
+label <- read_text(paste0('New Table("label", New Column("x", Character, "Nominal",',
+ 'Set Property("Value Labels", {"a"="","b"="B"}), Values({"a","b",""})))'))
+stopifnot(!is.na(label$data$x[1]), as.character(label$data$x[1]) == "", is.na(label$data$x[3]))
+
+# Real binary fixture with an empty compact character cell.
+p <- system.file("extdata", "upstream", "compact.jmp", package = "read.jmp")
+b <- read.jmp::read.jmp(p)
+stopifnot(is.factor(b$longcompact), is.na(b$longcompact[3]), !"" %in% levels(b$longcompact))
+raw <- read.jmp::read.jmp(p, factors = FALSE, missing_codes = FALSE)
+stopifnot(raw$longcompact[3] == "", !anyNA(raw$longcompact))
+
 cat("Default import conversion and repeat-conversion tests passed.\n")

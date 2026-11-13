@@ -1,7 +1,7 @@
-library(jmp2r)
-read_jmp <- function(...) jmp2r::read_jmp(..., output = "dataset")
-read_jrp <- function(...) jmp2r::read_jrp(..., output = "dataset")
-read_jmp_file <- function(...) jmp2r::read_jmp_file(..., output = "dataset")
+library(read.jmp)
+read_jmp <- function(...) read.jmp::read_jmp(..., output = "dataset")
+read_jrp <- function(...) read.jmp::read_jrp(..., output = "dataset")
+read_jmp_file <- function(...) read.jmp::read_jmp_file(..., output = "dataset")
 read_text <- function(text, ...) {
   p <- tempfile(fileext = ".jrp")
   on.exit(unlink(p))
@@ -63,10 +63,10 @@ expect_error(read_text(paste0('New Table("collision", New Column("x", Numeric, "
  'Set Property("Value Labels", {1="same",2="same"}), Values([1,2])))')))
 
 # Binary public fixture: defaults apply nominal conversion; numeric storage stays numeric.
-p <- system.file("extdata", "upstream", "compressed.jmp", package = "jmp2r")
+p <- system.file("extdata", "upstream", "compressed.jmp", package = "read.jmp")
 b <- read_jmp(p, metadata = "quiet")
 stopifnot(nrow(b$data) == 10000L, is.numeric(b$data$numeric), is.factor(b$data$character1))
-p <- system.file("extdata", "upstream", "example1.jmp", package = "jmp2r")
+p <- system.file("extdata", "upstream", "example1.jmp", package = "read.jmp")
 expect_error(read_jmp(p, metadata = "quiet")) # uninterpreted formula metadata
 stopifnot(nrow(read_jmp(p, metadata = "quiet", missing_codes = FALSE, factors = FALSE)$data) == 4L)
 for (args in list(list(missing_codes = NA), list(factors = 1))) {

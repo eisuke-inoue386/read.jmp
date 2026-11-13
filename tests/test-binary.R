@@ -1,13 +1,13 @@
-library(jmp2r)
-read_jmp <- function(...) jmp2r::read_jmp(..., output = "dataset")
-read_jrp <- function(...) jmp2r::read_jrp(..., output = "dataset")
-read_jmp_file <- function(...) jmp2r::read_jmp_file(..., output = "dataset")
+library(read.jmp)
+read_jmp <- function(...) read.jmp::read_jmp(..., output = "dataset")
+read_jrp <- function(...) read.jmp::read_jrp(..., output = "dataset")
+read_jmp_file <- function(...) read.jmp::read_jmp_file(..., output = "dataset")
 # These tests validate stored-value decoding independently of import conversion.
 read_stored <- function(...) read_jmp(..., missing_codes = FALSE, factors = FALSE)
 read_stored_file <- function(...) read_jmp_file(..., missing_codes = FALSE, factors = FALSE)
 
 # Real JMP files and expected values originate in JMPReader.jl's MIT test suite.
-fixture_dir <- system.file("extdata", "upstream", package = "jmp2r")
+fixture_dir <- system.file("extdata", "upstream", package = "read.jmp")
 stopifnot(nzchar(fixture_dir))
 read_fixture <- function(name) read_stored(file.path(fixture_dir, name), metadata = "quiet")
 expect_error_class <- function(expr, cls) {
@@ -15,7 +15,7 @@ expect_error_class <- function(expr, cls) {
   stopifnot(inherits(error, cls))
 }
 same <- function(x, y) stopifnot(isTRUE(all.equal(x, y, check.attributes = FALSE)))
-internal <- function(n) getFromNamespace(n, "jmp2r")
+internal <- function(n) getFromNamespace(n, "read.jmp")
 
 files <- list.files(fixture_dir, "\\.jmp$", full.names = TRUE)
 stopifnot(length(files) >= 19L)

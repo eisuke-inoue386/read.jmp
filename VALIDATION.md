@@ -1,7 +1,14 @@
 # Validation record
 
 Initial validation: 2026-10-21 (Asia/Tokyo).
-Publication check: 2026-10-28 (Asia/Tokyo).
+Publication check: 2026-11-13 (Asia/Tokyo), read.jmp 0.5.0.
+
+- The renamed package passes all six test scripts and `R CMD check --no-manual`.
+- `read.jmp()` matches the legacy readers for both JMP and supported JRP input.
+- Both standalone filenames are generated from the same sources and checked
+  byte-for-byte; legacy `jmp2r.R` remains usable without installation.
+- Standalone tests verify external-reference and dynamic-JRP rejection through
+  the new `read.jmp()` entry point.
 
 ## Executed locally
 
@@ -100,7 +107,7 @@ tests; the essential regression cases are included in the test suite.
 - Existing decoder/conversion suites exercise `output = "dataset"` explicitly
   to verify the earlier detailed interface as well.
 
-## 0.4.1 ordinal-order notification
+## 0.5.0 ordinal-order notification
 
 - Default import retains inferred-order diagnostics without warning.
 - Regression tests still check inferred levels, other warning behavior, and

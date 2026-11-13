@@ -1,6 +1,6 @@
 # Maintaining the GitHub publication
 
-Repository: https://github.com/eisuke-inoue386/jmp2r
+Repository: https://github.com/eisuke-inoue386/read.jmp
 
 ## Before each update
 
@@ -21,7 +21,7 @@ Rscript tools/build-standalone.R --check
 Rscript --vanilla tools/check-standalone.R
 ```
 
-Edit `R/` rather than `jmp2r.R`. The generated file includes license notices
+Edit `R/` rather than `read.jmp.R`. The generated file includes license notices
 and can be sourced without installing the package or downloading other files.
 CI rejects an outdated generated file and checks standalone use on each OS.
 
@@ -31,12 +31,12 @@ alone does not substitute for those platform checks.
 
 ```sh
 R CMD build --no-build-vignettes .
-R CMD check --no-manual jmp2r_0.4.1.tar.gz
+R CMD check --no-manual read.jmp_0.5.0.tar.gz
 ```
 
 For a release, tag the verified commit and create a GitHub Release. Attach a
 freshly built R source package and, optionally, a tested Windows binary
-package. `jmp2r-source.zip` is a source-folder archive, **not** an installable
+package. `read.jmp-source.zip` is a source-folder archive, **not** an installable
 R Windows binary package. Release assets must match the tagged source.
 
 Direct `source()` use is documented in both READMEs. Use a commit SHA in place

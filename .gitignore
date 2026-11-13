@@ -3,7 +3,7 @@
 .Ruserdata
 .Rproj.user/
 *.Rcheck/
-jmp2r_*.tar.gz
-jmp2r_*.zip
+read.jmp_*.tar.gz
+read.jmp_*.zip
 .DS_Store
 Thumbs.db

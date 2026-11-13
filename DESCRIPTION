@@ -1,9 +1,9 @@
-Package: jmp2r
+Package: read.jmp
 Type: Package
 Title: Read JMP Data Tables Without JMP
-Version: 0.4.1
+Version: 0.5.0
 Authors@R: c(
-    person("jmp2r contributors", role = "aut"),
+    person("read.jmp contributors", role = "aut"),
     person("eisuke-inoue386", role = "cre",
            email = "262287482+eisuke-inoue386@users.noreply.github.com"),
     person("David", "Mathers", role = c("ctb", "cph")),
@@ -20,5 +20,5 @@ Encoding: UTF-8
 Depends: R (>= 4.1.0)
 Imports: utils
 NeedsCompilation: no
-URL: https://github.com/eisuke-inoue386/jmp2r
-BugReports: https://github.com/eisuke-inoue386/jmp2r/issues
+URL: https://github.com/eisuke-inoue386/read.jmp
+BugReports: https://github.com/eisuke-inoue386/read.jmp/issues

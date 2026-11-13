@@ -1,14 +1,14 @@
-library(jmp2r)
-read_jmp <- function(...) jmp2r::read_jmp(..., output = "dataset")
-read_jrp <- function(...) jmp2r::read_jrp(..., output = "dataset")
-read_jmp_file <- function(...) jmp2r::read_jmp_file(..., output = "dataset")
-internal <- function(name) getFromNamespace(name, "jmp2r")
+library(read.jmp)
+read_jmp <- function(...) read.jmp::read_jmp(..., output = "dataset")
+read_jrp <- function(...) read.jmp::read_jrp(..., output = "dataset")
+read_jmp_file <- function(...) read.jmp::read_jmp_file(..., output = "dataset")
+internal <- function(name) getFromNamespace(name, "read.jmp")
 expect_error <- function(expr, cls) {
   e <- tryCatch(force(expr), error = identity)
   stopifnot(inherits(e, cls))
 }
 fixture <- function(name) {
-  p <- system.file("extdata", "upstream", name, package = "jmp2r")
+  p <- system.file("extdata", "upstream", name, package = "read.jmp")
   readBin(p, "raw", file.info(p)$size)
 }
 read_bytes <- function(bytes, ...) {

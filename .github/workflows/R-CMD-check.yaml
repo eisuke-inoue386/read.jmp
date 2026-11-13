@@ -32,14 +32,14 @@ jobs:
       - name: Check package and tests
         shell: Rscript {0}
         run: |
-          pkg <- list.files(pattern = "^jmp2r_.*[.]tar[.]gz$")
+          pkg <- list.files(pattern = "^read[.]jmp_.*[.]tar[.]gz$")
           stopifnot(length(pkg) == 1L)
           status <- system2(file.path(R.home("bin"), "R"), c("CMD", "check", "--no-manual", "--as-cran", pkg))
           if (status != 0L) stop("R CMD check failed")
-          log <- readLines("jmp2r.Rcheck/00check.log", warn = FALSE)
+          log <- readLines("read.jmp.Rcheck/00check.log", warn = FALSE)
           if (any(grepl("Status:.*(ERROR|WARNING)", log))) stop("Check returned errors or warnings")
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: check-${{ matrix.os }}
-          path: jmp2r.Rcheck
+          path: read.jmp.Rcheck

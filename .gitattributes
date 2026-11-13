@@ -1,2 +1,3 @@
 # Keep the generated distribution identical on every platform.
+read.jmp.R text eol=lf
 jmp2r.R text eol=lf

@@ -2,11 +2,12 @@
 ^\.github$
 ^\.gitignore$
 ^\.gitattributes$
-^jmp2r\.R$
+^read\.jmp\.R$
 ^tools$
 ^README\.ja\.md$
 ^PUBLISHING\.md$
 ^VALIDATION\.md$
 ^LICENSE\.md$
-^jmp2r_.*\.(tar\.gz|zip)$
+^read\.jmp_.*\.(tar\.gz|zip)$
 ^.*\.Rcheck$
+^jmp2r\.R$

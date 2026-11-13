@@ -1,3 +1,10 @@
+# read.jmp 0.5.0
+
+- Rename the package, repository and primary standalone file to read.jmp.
+- Add read.jmp() as the primary reader for both JMP and supported JRP files.
+- Retain read_jmp(), read_jrp(), read_jmp_file() and jmp2r.R for compatibility.
+- Import conversions, defaults and JRP rejection rules are unchanged.
+
 # jmp2r 0.4.1
 
 - Inferred ordinal category order is retained in diagnostics but no longer

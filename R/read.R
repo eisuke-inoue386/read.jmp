@@ -89,7 +89,7 @@
   if (is.null(result$table)) result$table <- list()
   result <- .jmp_filter_rows(result, exclude_rows)
   result$source <- list(file = basename(path), size = length(bytes),
-                        reader = "jmp2r", version = "0.4.1", backend = "base-R")
+                        reader = "read.jmp", version = "0.5.0", backend = "base-R")
   if (keep_source) result$source$bytes <- bytes
   class(result) <- "jmp_dataset"
   converted <- .jmp_analysis_result(result, FALSE, missing_codes, factors, ordinal_order)
@@ -177,7 +177,7 @@ read_jrp <- function(path, metadata = c("warn", "error", "quiet"),
               missing_codes, factors, ordinal_order, output)
 }
 
-read_jmp_file <- function(path, ...) {
+read.jmp <- function(path, ...) {
   if (!is.character(path) || length(path) != 1L || is.na(path))
     .jmp_abort("'path' must be one local file path.", "jmp_argument_error")
   extension <- tolower(sub("^.*\\.", "", basename(path)))
@@ -185,11 +185,14 @@ read_jmp_file <- function(path, ...) {
          .jmp_abort("Expected a .jmp or .jrp file extension.", "jmp_argument_error"))
 }
 
+# Retained for scripts written before the read.jmp rename.
+read_jmp_file <- read.jmp
+
 jmp_metadata <- function(x) {
   if (is.data.frame(x) && !is.null(attr(x, "jmp_diagnostics", exact = TRUE)))
     return(list(diagnostics = attr(x, "jmp_diagnostics", exact = TRUE)))
   if (!inherits(x, "jmp_dataset"))
-    .jmp_abort("'x' must be a jmp2r data frame or jmp_dataset.", "jmp_argument_error")
+    .jmp_abort("'x' must be a read.jmp data frame or jmp_dataset.", "jmp_argument_error")
   x[c("columns", "rows", "table", "scripts", "diagnostics", "source")]
 }
 

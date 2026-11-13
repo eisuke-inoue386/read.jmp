@@ -1,3 +1,4 @@
+export(read.jmp)
 export(read_jmp)
 export(read_jrp)
 export(read_jmp_file)

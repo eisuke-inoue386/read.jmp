@@ -41,7 +41,7 @@ Ordinary R modeling functions do not honor JMP metadata on their own.
 }
 \examples{
 x <- read_jmp(system.file("extdata", "upstream", "compressed.jmp",
-                         package = "jmp2r"), metadata = "quiet")
+                         package = "read.jmp"), metadata = "quiet")
 d <- as_analysis_data(x)
 ncol(d)
 }

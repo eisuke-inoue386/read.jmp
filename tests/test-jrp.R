@@ -1,7 +1,7 @@
-library(jmp2r)
-read_jmp <- function(...) jmp2r::read_jmp(..., output = "dataset")
-read_jrp <- function(...) jmp2r::read_jrp(..., output = "dataset")
-read_jmp_file <- function(...) jmp2r::read_jmp_file(..., output = "dataset")
+library(read.jmp)
+read_jmp <- function(...) read.jmp::read_jmp(..., output = "dataset")
+read_jrp <- function(...) read.jmp::read_jrp(..., output = "dataset")
+read_jmp_file <- function(...) read.jmp::read_jmp_file(..., output = "dataset")
 
 read_text <- function(text, ...) {
   path <- tempfile(fileext = ".jrp")
@@ -17,7 +17,7 @@ expect_error_class <- function(expr, expected) {
   invisible(error)
 }
 
-example <- read_jrp(system.file("extdata", "embedded-example.jrp", package = "jmp2r"), metadata = "quiet", missing_codes = FALSE, factors = FALSE)
+example <- read_jrp(system.file("extdata", "embedded-example.jrp", package = "read.jmp"), metadata = "quiet", missing_codes = FALSE, factors = FALSE)
 stopifnot(identical(example$data$score, c(10, -99, 30)),
           identical(example$columns$score$missing_value_codes, -99),
           identical(example$columns$group$value_labels$values, c(1, 2)),

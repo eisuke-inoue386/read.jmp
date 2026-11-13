@@ -1,4 +1,5 @@
-\name{read_jmp}
+\name{read.jmp}
+\alias{read.jmp}
 \alias{read_jmp}
 \alias{read_jrp}
 \alias{read_jmp_file}
@@ -6,6 +7,8 @@
 \description{Read supported binary JMP data tables, or a restricted literal
 subset of embedded-data JRP scripts. No JSL is executed.}
 \usage{
+read.jmp(path, ...)
+
 read_jmp(path, metadata = c("warn", "error", "quiet"),
   keep_source = TRUE, max_bytes = 512 * 1024^2, max_cells = 1e7,
   exclude_rows = TRUE, missing_codes = TRUE, factors = TRUE,
@@ -53,6 +56,10 @@ With \code{output = "dataset"}, a \code{jmp_dataset} list containing \code{data}
 \code{scripts}, \code{diagnostics}, and \code{source}.
 Unavailable metadata is explicitly marked unknown.}
 \details{
+\code{read.jmp()} selects the JMP or JRP reader by file extension.
+\code{read_jmp_file()} is a compatibility alias; \code{read_jmp()} and
+\code{read_jrp()} remain available for format-specific reading.
+
 The binary reader is experimental and based on independently decoded layouts,
 not an official JMP file specification. Unknown metadata is reported; unsupported
 data encodings fail instead of silently producing missing columns.
@@ -88,8 +95,8 @@ Errors inherit from \code{jmp_error}; metadata warnings inherit from
 a general purpose sandbox or a guarantee of a fixed peak memory usage.
 }
 \examples{
-path <- system.file("extdata", "upstream", "compressed.jmp", package = "jmp2r")
-x <- read_jmp(path, metadata = "quiet")
+path <- system.file("extdata", "upstream", "compressed.jmp", package = "read.jmp")
+x <- read.jmp(path, metadata = "quiet")
 names(x)
 head(jmp_metadata(x)$diagnostics)
 }

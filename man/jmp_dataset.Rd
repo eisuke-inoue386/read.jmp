@@ -28,7 +28,7 @@ known-absent properties. Keep the whole object with \code{saveRDS()} to preserve
 metadata and original bytes; a CSV export cannot preserve all these components.}
 \examples{
 x <- read_jmp(system.file("extdata", "upstream", "compressed.jmp",
-                         package = "jmp2r"), metadata = "quiet")
+                         package = "read.jmp"), metadata = "quiet")
 nrow(as.data.frame(x))
 names(jmp_metadata(x))
 }

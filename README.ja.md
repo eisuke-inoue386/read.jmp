@@ -1,14 +1,19 @@
-# jmp2r
+# read.jmp
+
+旧名称は `jmp2r` です。パッケージ名・リポジトリ名を `read.jmp` に変更しました。
+`read.jmp()` で `.jmp` と対応する `.jrp` を読み込めます。
+旧関数 `read_jmp()`・`read_jrp()`・`read_jmp_file()` と、
+旧公開ファイル名 `jmp2r.R` も互換性のため維持します。
 
 JMPをインストールせずに、対応する`.jmp`や限定的な`.jrp`をRに読み込みます。
 R 4.1以上が必要です。Python・Julia・追加のRパッケージは不要です。
-**0.4.1は実験版です。すべてのJMPファイル・設定には対応していません。**
+**0.5.0は実験版です。すべてのJMPファイル・設定には対応していません。**
 
 ## インストールせずに使う
 
 ```r
-source("https://raw.githubusercontent.com/eisuke-inoue386/jmp2r/main/jmp2r.R", encoding = "UTF-8")
-result <- read_jmp_file("C:/任意のフォルダ/data.jmp")
+source("https://raw.githubusercontent.com/eisuke-inoue386/read.jmp/main/read.jmp.R", encoding = "UTF-8")
+result <- read.jmp("C:/任意のフォルダ/data.jmp")
 
 head(result)
 names(result)
@@ -26,14 +31,14 @@ View(result)
 
 元ファイルは変更しません。データファイルのアップロードも行いません。
 Rを再起動したら再度`source()`してください。単一ファイルを保存すれば
-`source("jmp2r.R", encoding = "UTF-8")`でオフラインでも使えます。
+`source("read.jmp.R", encoding = "UTF-8")`でオフラインでも使えます。
 `main`は更新されるため、同じ版を使うにはコミットSHAの指定かローカル保存を使います。
 通常の`source()`と同様、コードを実行し、同名の関数があれば上書きします。
 
 ## 変換をオフにする
 
 ```r
-result <- read_jmp_file(
+result <- read.jmp(
   "data.jmp",
   exclude_rows = FALSE,
   missing_codes = FALSE,
@@ -72,7 +77,7 @@ jmp_metadata(result)$diagnostics
 ## 従来の詳細形式を使う
 
 ```r
-details <- read_jmp_file("data.jmp", output = "dataset")
+details <- read.jmp("data.jmp", output = "dataset")
 details$data
 details$columns
 details$rows
@@ -111,13 +116,13 @@ JSLは一切実行しません。外部データ参照、動的処理、分析�
 
 ```r
 install.packages("remotes")
-remotes::install_github("eisuke-inoue386/jmp2r")
-library(jmp2r)
-result <- read_jmp_file("data.jmp")
+remotes::install_github("eisuke-inoue386/read.jmp")
+library(read.jmp)
+result <- read.jmp("data.jmp")
 ```
 
-ローカルのソースパッケージは`jmp2r_0.4.1.tar.gz`、Windowsバイナリは
-`jmp2r_0.4.1.zip`です。`jmp2r-source.zip`はリポジトリ用ソース一式であり、
+ローカルのソースパッケージは`read.jmp_0.5.0.tar.gz`、Windowsバイナリは
+`read.jmp_0.5.0.zip`です。`read.jmp-source.zip`はリポジトリ用ソース一式であり、
 インストール用のWindowsバイナリではありません。
 
 検証は[VALIDATION.md](VALIDATION.md)、保守・公開は[PUBLISHING.md](PUBLISHING.md)を参照。

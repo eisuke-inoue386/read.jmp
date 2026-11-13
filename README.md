@@ -1,10 +1,15 @@
-# jmp2r
+# read.jmp
+
+Previously named `jmp2r`. The package and repository are now `read.jmp`;
+`read.jmp()` reads both `.jmp` and supported `.jrp` files. Legacy functions
+`read_jmp()`, `read_jrp()` and `read_jmp_file()` remain available.
+The legacy standalone filename `jmp2r.R` is also maintained.
 
 Read supported JMP `.jmp` tables directly in R without JMP, Python, Julia or
 additional R packages. A restricted `.jrp` reader accepts literal embedded
 values without executing JSL. R 4.1 or newer is required.
 
-**Experimental 0.4.1.** Supported layouts are tested; this is not a universal
+**Experimental 0.5.0.** Supported layouts are tested; this is not a universal
 JMP reader or a lossless reproduction of JMP's settings. See
 [日本語の説明](README.ja.md), [validation](VALIDATION.md) and
 [publication instructions](PUBLISHING.md).
@@ -12,8 +17,8 @@ JMP reader or a lossless reproduction of JMP's settings. See
 ## Use with one source() call
 
 ```r
-source("https://raw.githubusercontent.com/eisuke-inoue386/jmp2r/main/jmp2r.R", encoding = "UTF-8")
-result <- read_jmp_file("my-data.jmp")
+source("https://raw.githubusercontent.com/eisuke-inoue386/read.jmp/main/read.jmp.R", encoding = "UTF-8")
+result <- read.jmp("my-data.jmp")
 
 head(result)
 names(result)
@@ -27,7 +32,7 @@ The reader defaults to removing excluded rows, converting missing codes to
 Continuous columns retain the supported numeric/date type.
 
 The standalone file contains the reader itself and downloads no additional
-code. Save it locally to use `source("jmp2r.R", encoding = "UTF-8")` offline.
+code. Save it locally to use `source("read.jmp.R", encoding = "UTF-8")` offline.
 Loading code from the URL needs an internet connection; reading data is local
 and does not upload files. Source it again after restarting R. For a fixed
 version, replace `main` with a reviewed commit SHA or save the file locally.
@@ -38,7 +43,7 @@ in your environment are replaced.
 
 ```r
 # Retain all stored rows and turn off NA/factor conversion:
-raw <- read_jmp_file("my-data.jmp", exclude_rows = FALSE,
+raw <- read.jmp("my-data.jmp", exclude_rows = FALSE,
                      missing_codes = FALSE, factors = FALSE)
 ```
 
@@ -80,7 +85,7 @@ unsupported values, unsafe JRP, or conversions requiring unknown metadata.
 ## Optional detailed output
 
 ```r
-details <- read_jmp_file("my-data.jmp", output = "dataset")
+details <- read.jmp("my-data.jmp", output = "dataset")
 details$data
 details$columns
 details$rows
@@ -135,22 +140,22 @@ when they embed data.** See `inst/extdata/embedded-example.jrp` for supported in
 
 ```r
 install.packages("remotes")
-remotes::install_github("eisuke-inoue386/jmp2r")
-library(jmp2r)
-result <- read_jmp_file("my-data.jmp")
+remotes::install_github("eisuke-inoue386/read.jmp")
+library(read.jmp)
+result <- read.jmp("my-data.jmp")
 ```
 
 Local source archives can be installed with
-`install.packages("jmp2r_0.4.1.tar.gz", repos = NULL, type = "source")`.
-The separately built Windows binary is `jmp2r_0.4.1.zip` (`type = "win.binary"`).
-`jmp2r-source.zip` is a source-folder archive, not an installable Windows binary.
-Package examples using `system.file(..., package = "jmp2r")` require installation.
+`install.packages("read.jmp_0.5.0.tar.gz", repos = NULL, type = "source")`.
+The separately built Windows binary is `read.jmp_0.5.0.zip` (`type = "win.binary"`).
+`read.jmp-source.zip` is a source-folder archive, not an installable Windows binary.
+Package examples using `system.file(..., package = "read.jmp")` require installation.
 
 ## Tests and provenance
 
 ```sh
 R CMD build .
-R CMD check --no-manual jmp2r_0.4.1.tar.gz
+R CMD check --no-manual read.jmp_0.5.0.tar.gz
 ```
 
 Tests use base R. CI checks the package and standalone file on Windows, macOS
@@ -158,7 +163,7 @@ and Linux, including generation consistency. Input size, dimensions,
 decompression and JRP nesting/token limits are bounded, but are not a general
 sandbox or a fixed peak-memory guarantee.
 
-MIT for jmp2r. Binary parsing derives from these MIT projects:
+MIT for read.jmp. Binary parsing derives from these MIT projects:
 
 - [jmp-convert](https://github.com/davidmathers/jmp-convert), David Mathers,
   commit `5024c5aba8be0cbfaa21e5a3be85cd9f8a33c3fc`.

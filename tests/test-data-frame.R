@@ -1,9 +1,9 @@
-library(jmp2r)
+library(read.jmp)
 read_text <- function(text, ...) {
   p <- tempfile(fileext = ".jrp")
   on.exit(unlink(p))
   writeLines(text, p, useBytes = TRUE)
-  read_jmp_file(p, ...)
+  read.jmp(p, ...)
 }
 text <- paste0('New Table("plain", ',
  'New Column("data", Numeric, Values([1,99,3]), Set Property("Missing Value Codes", {99})),',
@@ -34,7 +34,7 @@ stopifnot(inherits(e, "jmp_metadata_error"))
 
 # Unused metadata does not cause warnings or metadata='error' failures for
 # plain-data output, while detailed mode still reports its incomplete metadata.
-p <- system.file("extdata", "upstream", "singlecolumnsinglerow.jmp", package = "jmp2r")
+p <- system.file("extdata", "upstream", "singlecolumnsinglerow.jmp", package = "read.jmp")
 b <- read_jmp(p, metadata = "error")
 stopifnot(is.data.frame(b), nrow(b) == 1L, ncol(b) == 1L,
           nrow(jmp_metadata(b)$diagnostics) == 0L)
@@ -45,3 +45,11 @@ stopifnot(inherits(e, "jmp_metadata_error")) # order inference remains visible
 e <- tryCatch(read_jmp(p, output = "invalid"), error = identity)
 stopifnot(inherits(e, "error"))
 cat("Plain-data output, diagnostics and detailed compatibility tests passed.\n")
+
+# The new public entry point preserves both formats and legacy calls.
+stopifnot(identical(read.jmp, read_jmp_file),
+          identical(read.jmp(p, metadata = "quiet"), read_jmp(p, metadata = "quiet")))
+jrp <- system.file("extdata", "embedded-example.jrp", package = "read.jmp")
+stopifnot(identical(read.jmp(jrp, metadata = "quiet"), read_jrp(jrp, metadata = "quiet")))
+e <- tryCatch(read.jmp("unsupported.csv"), error = identity)
+stopifnot(inherits(e, "jmp_argument_error"))

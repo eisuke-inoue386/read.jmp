@@ -1120,7 +1120,7 @@
 }
 
 .jmp_finish <- function(result, path, bytes, keep_source, metadata, exclude_rows,
-                        missing_codes, factors, ordinal_order, output) {
+                        missing_codes, factors, ordinal_order, output, blank_as_na) {
   if (!is.data.frame(result$data) || length(result$columns) != ncol(result$data))
     .jmp_abort("Reader returned inconsistent column metadata.", "jmp_corrupt_error")
   if (!is.null(result$rows) && nrow(result$rows) != nrow(result$data))
@@ -1132,14 +1132,15 @@
   if (is.null(result$table)) result$table <- list()
   result <- .jmp_filter_rows(result, exclude_rows)
   result$source <- list(file = basename(path), size = length(bytes),
-                        reader = "read.jmp", version = "0.5.2", backend = "base-R")
+                        reader = "read.jmp", version = "0.6.0", backend = "base-R")
   if (keep_source) result$source$bytes <- bytes
   class(result) <- "jmp_dataset"
-  converted <- .jmp_analysis_result(result, FALSE, missing_codes, factors, ordinal_order)
+  converted <- .jmp_analysis_result(result, FALSE, missing_codes, factors, ordinal_order, blank_as_na)
   result$data <- converted$data
   result$columns <- converted$columns
   result$diagnostics <- converted$diagnostics
   result$table$missing_codes <- missing_codes
+  result$table$blank_as_na <- blank_as_na
   result$table$factors <- factors
   result$table$ordinal_order <- ordinal_order
   if (output == "data.frame") {
@@ -1174,11 +1175,12 @@ read_jmp <- function(path, metadata = c("warn", "error", "quiet"),
                      keep_source = TRUE, max_bytes = 512 * 1024^2, max_cells = 1e7,
                      exclude_rows = TRUE, missing_codes = TRUE, factors = TRUE,
                      ordinal_order = c("sort", "error", "appearance"),
-                     output = c("data.frame", "dataset")) {
+                     output = c("data.frame", "dataset"), blank_as_na = TRUE) {
   metadata <- match.arg(metadata)
   output <- match.arg(output)
   ordinal_order <- match.arg(ordinal_order)
   missing_codes <- .jmp_flag(missing_codes, "missing_codes")
+  blank_as_na <- .jmp_flag(blank_as_na, "blank_as_na")
   factors <- .jmp_flag(factors, "factors")
   exclude_rows <- .jmp_flag(exclude_rows, "exclude_rows")
   keep_source <- .jmp_flag(keep_source, "keep_source")
@@ -1187,18 +1189,19 @@ read_jmp <- function(path, metadata = c("warn", "error", "quiet"),
   bytes <- .jmp_read_bytes(path, max_bytes)
   result <- .read_jmp_binary(bytes, max_cells = max_cells)
   .jmp_finish(result, path, bytes, keep_source, metadata, exclude_rows,
-              missing_codes, factors, ordinal_order, output)
+              missing_codes, factors, ordinal_order, output, blank_as_na)
 }
 
 read_jrp <- function(path, metadata = c("warn", "error", "quiet"),
                      keep_source = TRUE, max_bytes = 16 * 1024^2, max_cells = 1e7,
                      exclude_rows = TRUE, missing_codes = TRUE, factors = TRUE,
                      ordinal_order = c("sort", "error", "appearance"),
-                     output = c("data.frame", "dataset")) {
+                     output = c("data.frame", "dataset"), blank_as_na = TRUE) {
   metadata <- match.arg(metadata)
   output <- match.arg(output)
   ordinal_order <- match.arg(ordinal_order)
   missing_codes <- .jmp_flag(missing_codes, "missing_codes")
+  blank_as_na <- .jmp_flag(blank_as_na, "blank_as_na")
   factors <- .jmp_flag(factors, "factors")
   exclude_rows <- .jmp_flag(exclude_rows, "exclude_rows")
   keep_source <- .jmp_flag(keep_source, "keep_source")
@@ -1217,7 +1220,7 @@ read_jrp <- function(path, metadata = c("warn", "error", "quiet"),
   Encoding(text) <- "UTF-8"
   result <- .read_jrp_text(text, max_cells = max_cells)
   .jmp_finish(result, path, bytes, keep_source, metadata, exclude_rows,
-              missing_codes, factors, ordinal_order, output)
+              missing_codes, factors, ordinal_order, output, blank_as_na)
 }
 
 read.jmp <- function(path, ...) {
@@ -1259,26 +1262,30 @@ as.data.frame.jmp_dataset <- function(x, row.names = NULL, optional = FALSE, ...
 
 as_analysis_data <- function(x, exclude_rows = FALSE, missing_codes = FALSE,
                              factors = FALSE,
-                             ordinal_order = c("sort", "error", "appearance")) {
+                             ordinal_order = c("sort", "error", "appearance"),
+                             blank_as_na = FALSE) {
   if (is.data.frame(x)) {
     exclude_rows <- .jmp_flag(exclude_rows, "exclude_rows")
     missing_codes <- .jmp_flag(missing_codes, "missing_codes")
+    blank_as_na <- .jmp_flag(blank_as_na, "blank_as_na")
     factors <- .jmp_flag(factors, "factors")
-    if (exclude_rows || missing_codes || factors)
+    if (exclude_rows || missing_codes || factors || blank_as_na)
       .jmp_abort(paste0("A data frame is already the imported data; further JMP conversions require ",
                        "reading with output = 'dataset' or setting conversion options at import."),
                  "jmp_metadata_error")
     return(x)
   }
   .jmp_analysis_result(x, exclude_rows, missing_codes, factors,
-                       match.arg(ordinal_order))$data
+                       match.arg(ordinal_order), blank_as_na)$data
 }
 
-.jmp_analysis_result <- function(x, exclude_rows, missing_codes, factors, ordinal_order) {
+.jmp_analysis_result <- function(x, exclude_rows, missing_codes, factors, ordinal_order,
+                                 blank_as_na = FALSE) {
   if (!inherits(x, "jmp_dataset"))
     .jmp_abort("'x' must be a jmp_dataset.", "jmp_argument_error")
   exclude_rows <- .jmp_flag(exclude_rows, "exclude_rows")
   missing_codes <- .jmp_flag(missing_codes, "missing_codes")
+  blank_as_na <- .jmp_flag(blank_as_na, "blank_as_na")
   factors <- .jmp_flag(factors, "factors")
   d <- x$data
   columns <- x$columns
@@ -1296,14 +1303,18 @@ as_analysis_data <- function(x, exclude_rows = FALSE, missing_codes = FALSE,
   for (i in seq_along(d)) {
     m <- x$columns[[i]]
     stored <- if (!is.null(m$stored_values)) m$stored_values[kept] else d[[i]]
+    # Separate optional blank handling from explicitly declared missing codes.
+    # Match stored cells, never display labels for genuine nonmissing codes.
+    if (blank_as_na && is.character(stored)) {
+      d[[i]][!is.na(stored) & stored == ""] <- NA
+      m$stored_values <- stored
+      m$blank_as_na_applied <- TRUE
+    }
     if (missing_codes) {
       if (!.jmp_known(m, "missing_value_codes"))
         .jmp_abort(paste0("Missing-value definitions are unavailable for column '",
                            names(d)[i], "'."), "jmp_metadata_error")
       codes <- m$missing_value_codes
-      # Empty stored character cells are missing for analysis. Do this before
-      # applying labels, which may legitimately display a nonempty code as "".
-      if (is.character(stored)) codes <- c(codes, "")
       if (length(codes)) {
         code_values <- stored
         if (!is.null(m$raw_values)) {
@@ -1353,9 +1364,9 @@ as_analysis_data <- function(x, exclude_rows = FALSE, missing_codes = FALSE,
         }
         if (isTRUE(m$missing_codes_applied)) {
           codes <- m$missing_value_codes
-          if (is.character(stored)) codes <- c(codes, "")
           lev <- lev[!lev %in% codes]
         }
+        if (isTRUE(m$blank_as_na_applied)) lev <- lev[lev != ""]
         if (anyNA(lev) || anyDuplicated(lev))
           .jmp_abort("Category levels must be unique and non-missing.", "jmp_metadata_error")
         observed <- unique(values[!is.na(values)])

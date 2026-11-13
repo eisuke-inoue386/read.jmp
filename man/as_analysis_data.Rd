@@ -5,14 +5,17 @@
 object unchanged. Each requested transformation requires known metadata.}
 \usage{
 as_analysis_data(x, exclude_rows = FALSE, missing_codes = FALSE,
-  factors = FALSE, ordinal_order = c("sort", "error", "appearance"))
+  factors = FALSE, ordinal_order = c("sort", "error", "appearance"),
+  blank_as_na = FALSE)
 }
 \arguments{
 \item{x}{A detailed \code{jmp_dataset}, or a data frame when no additional
 conversions are requested.}
 \item{exclude_rows}{Remove rows whose known exclusion flag is true.}
-\item{missing_codes}{Convert explicitly declared missing value codes and empty stored character
-cells to NA. Whitespace and literal "NA"/"." are retained unless declared missing.}
+\item{missing_codes}{Convert explicitly declared missing value codes to NA.}
+\item{blank_as_na}{Convert empty stored character cells to NA independently of
+\code{missing_codes}. Defaults to FALSE here, preserving the already imported
+data; readers default to TRUE. See \code{\link{read.jmp}} for blank semantics.}
 \item{factors}{Convert nominal columns to factors and ordinal columns to ordered
 factors. Explicit JMP Value Order takes precedence.}
 \item{ordinal_order}{Fallback for ordinal columns without a declared order:

@@ -1,3 +1,13 @@
+# read.jmp 0.6.0
+
+- Add `blank_as_na = TRUE` to readers, independently controlling conversion of
+  empty stored character cells to NA. FALSE retains ordinary empty categories.
+- `missing_codes` now controls only explicitly declared missing codes. An empty
+  value explicitly declared missing still becomes NA when that option is TRUE.
+- Add `blank_as_na = FALSE` to `as_analysis_data()`, consistent with its other
+  opt-in conversions. FALSE does not undo conversions already performed.
+- Detailed output records the blank option and preserves original cell values.
+
 # read.jmp 0.5.2
 
 - Convert empty stored character cells to NA by default before factor conversion,

@@ -1,7 +1,7 @@
 Package: read.jmp
 Type: Package
 Title: Read JMP Data Tables Without JMP
-Version: 0.5.2
+Version: 0.6.0
 Authors@R: c(
     person("read.jmp contributors", role = "aut"),
     person("eisuke-inoue386", role = "cre",

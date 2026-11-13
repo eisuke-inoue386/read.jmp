@@ -15,7 +15,7 @@ read_bytes <- function(bytes, ...) {
   p <- tempfile(fileext = ".jmp")
   on.exit(unlink(p))
   writeBin(bytes, p)
-  read_jmp_file(p, metadata = "quiet", missing_codes = FALSE, factors = FALSE, ...)
+  read_jmp_file(p, metadata = "quiet", missing_codes = FALSE, factors = FALSE, blank_as_na = FALSE, ...)
 }
 state_start <- function(bytes, n) {
   h <- internal(".jmp_header")(bytes, 1e7)

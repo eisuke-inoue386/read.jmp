@@ -90,10 +90,10 @@ stopifnot(is.factor(x$data$group), is.na(x$data$group[2]),
           identical(as_analysis_data(x, factors = TRUE), x$data))
 plain <- read_text(text_empty, factors = FALSE)
 stopifnot(is.character(plain$data$group), is.na(plain$data$group[2]))
-raw <- read_text(text_empty, missing_codes = FALSE, factors = FALSE)
+raw <- read_text(text_empty, missing_codes = FALSE, factors = FALSE, blank_as_na = FALSE)
 stopifnot(identical(raw$data$group, c("a","","NA"," ",".")),
-          identical(as_analysis_data(raw, missing_codes = TRUE, factors = TRUE), x$data))
-retained <- read_text(text_empty, missing_codes = FALSE)
+          identical(as_analysis_data(raw, missing_codes = TRUE, factors = TRUE, blank_as_na = TRUE), x$data))
+retained <- read_text(text_empty, missing_codes = FALSE, blank_as_na = FALSE)
 stopifnot("" %in% levels(retained$data$group), !anyNA(retained$data$group),
           "" %in% levels(retained$data$rank))
 all_empty <- read_text('New Table("empty", New Column("x", Character, "Ordinal", Values({"",""})))')
@@ -107,7 +107,35 @@ stopifnot(!is.na(label$data$x[1]), as.character(label$data$x[1]) == "", is.na(la
 p <- system.file("extdata", "upstream", "compact.jmp", package = "read.jmp")
 b <- read.jmp::read.jmp(p)
 stopifnot(is.factor(b$longcompact), is.na(b$longcompact[3]), !"" %in% levels(b$longcompact))
-raw <- read.jmp::read.jmp(p, factors = FALSE, missing_codes = FALSE)
+raw <- read.jmp::read.jmp(p, factors = FALSE, missing_codes = FALSE, blank_as_na = FALSE)
 stopifnot(raw$longcompact[3] == "", !anyNA(raw$longcompact))
 
 cat("Default import conversion and repeat-conversion tests passed.\n")
+
+# Blank handling and declared missing codes are independent switches.
+nominal <- paste0('New Table("options", New Column("x", Character, "Nominal",',
+ 'Set Property("Missing Value Codes", {"99"}),',
+ 'Set Property("Value Order", {"a","","99"}), Values({"a","","99"})))')
+for (blank in c(TRUE, FALSE)) for (codes in c(TRUE, FALSE)) {
+  x <- read_text(nominal, blank_as_na = blank, missing_codes = codes)
+  stopifnot(is.factor(x$data$x), identical(is.na(x$data$x), c(FALSE, blank, codes)),
+            identical("" %in% levels(x$data$x), !blank),
+            identical("99" %in% levels(x$data$x), !codes),
+            identical(x$table$blank_as_na, blank),
+            identical(as_analysis_data(x, factors = TRUE), x$data))
+  plain <- read_text(nominal, blank_as_na = blank, missing_codes = codes, factors = FALSE)
+  stopifnot(identical(is.na(plain$data$x), c(FALSE, blank, codes)))
+}
+# FALSE retains ordinary blanks, but never cancels explicit missing codes.
+explicit_blank <- read_text(paste0('New Table("declared", New Column("x", Character,',
+ 'Set Property("Missing Value Codes", {""}), Values({"a",""})))'), blank_as_na = FALSE)
+stopifnot(is.na(explicit_blank$data$x[2]))
+for (bad in list(NA, 1, "TRUE", logical())) {
+  e <- tryCatch(read_text(nominal, blank_as_na = bad), error = identity)
+  stopifnot(inherits(e, "jmp_argument_error"))
+}
+p <- system.file("extdata", "upstream", "compact.jmp", package = "read.jmp")
+kept <- read.jmp::read.jmp(p, blank_as_na = FALSE)
+stopifnot(!is.na(kept$longcompact[3]), "" %in% levels(kept$longcompact))
+e <- tryCatch(as_analysis_data(kept, blank_as_na = TRUE), error = identity)
+stopifnot(inherits(e, "jmp_metadata_error"))

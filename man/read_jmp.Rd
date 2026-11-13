@@ -13,13 +13,13 @@ read_jmp(path, metadata = c("warn", "error", "quiet"),
   keep_source = TRUE, max_bytes = 512 * 1024^2, max_cells = 1e7,
   exclude_rows = TRUE, missing_codes = TRUE, factors = TRUE,
   ordinal_order = c("sort", "error", "appearance"),
-  output = c("data.frame", "dataset"))
+  output = c("data.frame", "dataset"), blank_as_na = TRUE)
 
 read_jrp(path, metadata = c("warn", "error", "quiet"),
   keep_source = TRUE, max_bytes = 16 * 1024^2, max_cells = 1e7,
   exclude_rows = TRUE, missing_codes = TRUE, factors = TRUE,
   ordinal_order = c("sort", "error", "appearance"),
-  output = c("data.frame", "dataset"))
+  output = c("data.frame", "dataset"), blank_as_na = TRUE)
 
 read_jmp_file(path, ...)
 }
@@ -36,11 +36,14 @@ Unknown exclusion metadata causes an error even with quiet diagnostics.
 Set FALSE explicitly to retain all stored rows. Hidden or selected rows alone
 are not removed. Original source bytes, when kept, still contain all rows.}
 \item{...}{Arguments passed to \code{read_jmp()} or \code{read_jrp()}.}
-\item{missing_codes}{Convert known JMP missing codes to \code{NA} before factor
-conversion (default TRUE). Empty stored character cells are also converted
-to NA and removed from factor levels. Whitespace and literal "NA"/"." are
-retained unless declared as missing codes. Set FALSE to retain codes and
-empty strings as values.}
+\item{missing_codes}{Convert explicitly declared JMP missing codes to \code{NA}
+before factor conversion (default TRUE). This is independent of blank handling.}
+\item{blank_as_na}{Convert empty stored character cells (\code{""}) to \code{NA}
+before factor conversion and remove empty category levels (default TRUE).
+Applies to character columns, including nominal and ordinal scales, even when
+\code{factors = FALSE}. Set FALSE to retain ordinary blanks. Explicitly declared
+missing codes still follow \code{missing_codes}. Whitespace-only strings, literal
+"NA"/"." and empty display labels for nonempty codes are not treated as blanks.}
 \item{factors}{Convert nominal columns to factors and ordinal columns to ordered
 factors (default TRUE), using supported value labels. Set FALSE to retain values.}
 \item{ordinal_order}{When JMP has no explicit category order: \code{"sort"}

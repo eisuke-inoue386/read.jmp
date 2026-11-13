@@ -9,7 +9,7 @@ read_text <- function(text, ...) {
   con <- file(path, "wb")
   writeBin(charToRaw(enc2utf8(text)), con)
   close(con)
-  read_jrp(path, metadata = "quiet", missing_codes = FALSE, factors = FALSE, ...)
+  read_jrp(path, metadata = "quiet", missing_codes = FALSE, factors = FALSE, blank_as_na = FALSE, ...)
 }
 expect_error_class <- function(expr, expected) {
   error <- tryCatch({ force(expr); NULL }, error = identity)
@@ -17,7 +17,7 @@ expect_error_class <- function(expr, expected) {
   invisible(error)
 }
 
-example <- read_jrp(system.file("extdata", "embedded-example.jrp", package = "read.jmp"), metadata = "quiet", missing_codes = FALSE, factors = FALSE)
+example <- read_jrp(system.file("extdata", "embedded-example.jrp", package = "read.jmp"), metadata = "quiet", missing_codes = FALSE, factors = FALSE, blank_as_na = FALSE)
 stopifnot(identical(example$data$score, c(10, -99, 30)),
           identical(example$columns$score$missing_value_codes, -99),
           identical(example$columns$group$value_labels$values, c(1, 2)),

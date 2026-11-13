@@ -7,7 +7,7 @@
 
 JMPをインストールせずに、対応する`.jmp`や限定的な`.jrp`をRに読み込みます。
 R 4.1以上が必要です。Python・Julia・追加のRパッケージは不要です。
-**0.5.2は実験版です。すべてのJMPファイル・設定には対応していません。**
+**0.6.0は実験版です。すべてのJMPファイル・設定には対応していません。**
 
 ## インストールせずに使う
 
@@ -42,9 +42,14 @@ result <- read.jmp(
   "data.jmp",
   exclude_rows = FALSE,
   missing_codes = FALSE,
-  factors = FALSE
+  factors = FALSE,
+  blank_as_na = FALSE
 )
 ```
+
+`blank_as_na`は、名義・順序尺度を含む文字列の空欄（`""`）を`NA`にする指定です。
+`FALSE`なら通常の空欄を保持します。JMPで空欄自体が欠測コードに指定されている場合は、
+`missing_codes = TRUE`によって`NA`になります。空白文字だけの値は対象外です。
 
 すべて既定値はTRUEです。必要なものだけFALSEにできます。
 変換に必要な情報が読めない場合は、推測せずエラーにします。
@@ -101,7 +106,8 @@ FALSE指定は、すでに行った変換を元に戻す操作ではありませ
 対応する数値・整数・UTF-8文字列・圧縮データ・日時・値ラベル、尺度、
 リテラルの欠測コード・カテゴリ順序、対応形式の行属性を読み取ります。
 空文字列（`""`）は既定で`NA`に変換し、factorの水準から除きます。
-`missing_codes = FALSE`で空文字列と欠測コードを元の値のまま保持できます。
+`blank_as_na = FALSE`で通常の空文字列を保持し、
+`missing_codes = FALSE`で明示的な欠測コードを保持します。両者は独立した指定です。
 空白だけの文字列や文字列の`"NA"`・`"."`は、欠測コードの指定がなければ保持します。
 64ビット整数は丸めを避けるため正確な十進文字列です。日時のタイムゾーンは不明で、
 UTCは表示上の規約です。未知のデータ形式は、欠測値で埋めずにエラーにします。
@@ -123,8 +129,8 @@ library(read.jmp)
 result <- read.jmp("data.jmp")
 ```
 
-ローカルのソースパッケージは`read.jmp_0.5.2.tar.gz`、Windowsバイナリは
-`read.jmp_0.5.2.zip`です。`read.jmp-source.zip`はリポジトリ用ソース一式であり、
+ローカルのソースパッケージは`read.jmp_0.6.0.tar.gz`、Windowsバイナリは
+`read.jmp_0.6.0.zip`です。`read.jmp-source.zip`はリポジトリ用ソース一式であり、
 インストール用のWindowsバイナリではありません。
 
 検証は[VALIDATION.md](VALIDATION.md)、保守・公開は[PUBLISHING.md](PUBLISHING.md)を参照。

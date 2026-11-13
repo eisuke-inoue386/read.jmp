@@ -3,8 +3,8 @@ read_jmp <- function(...) read.jmp::read_jmp(..., output = "dataset")
 read_jrp <- function(...) read.jmp::read_jrp(..., output = "dataset")
 read_jmp_file <- function(...) read.jmp::read_jmp_file(..., output = "dataset")
 # These tests validate stored-value decoding independently of import conversion.
-read_stored <- function(...) read_jmp(..., missing_codes = FALSE, factors = FALSE)
-read_stored_file <- function(...) read_jmp_file(..., missing_codes = FALSE, factors = FALSE)
+read_stored <- function(...) read_jmp(..., missing_codes = FALSE, factors = FALSE, blank_as_na = FALSE)
+read_stored_file <- function(...) read_jmp_file(..., missing_codes = FALSE, factors = FALSE, blank_as_na = FALSE)
 
 # Real JMP files and expected values originate in JMPReader.jl's MIT test suite.
 fixture_dir <- system.file("extdata", "upstream", package = "read.jmp")

@@ -127,8 +127,23 @@
   c <- .jmp_cursor(bytes, info$table_header_offset)
   end <- info$column_index_offset
   if (end - c$pos < 20) return(NULL)
+  # Some tables store a length-prefixed description/script block (1) before
+  # the fixed header. Skip its bounded payload without interpreting its text.
+  if (.jmp_uint(.jmp_slice(bytes, c$pos, 2), 2) == 1) {
+    c$skip(2)
+    size <- c$num(4)
+    if (size > end - c$pos - 20) return(NULL)
+    c$skip(size)
+  }
   if (c$num(2) != 5 || c$num(4) != 4) return(NULL)
   c$skip(4)
+  # Optional fixed-size table attribute, preceding the optional block 31.
+  if (.jmp_uint(.jmp_slice(bytes, c$pos, 2), 2) == 15) {
+    if (end - c$pos < 20) return(NULL)
+    c$skip(2)
+    if (c$num(4) != 4) return(NULL)
+    c$skip(4)
+  }
   if (.jmp_uint(.jmp_slice(bytes, c$pos, 2), 2) == 31) {
     c$skip(2)
     size <- c$num(4)
@@ -206,6 +221,32 @@
   }, error = function(e) NULL)
 }
 
+.jmp_ignored_column_property <- function(text) {
+  # Binary tables already contain stored values. These unrelated properties
+  # need not be evaluated or understood to read missing codes/value order.
+  # Require one complete, balanced outer call; never ignore trailing calls.
+  tokens <- .jrp_lex(text)
+  if (length(tokens) < 4L || tokens[[1]]$type != "ident" ||
+      !.jrp_name(tokens[[1]]$value) %in% c("aliases", "formula", "notes") ||
+      tokens[[2]]$type != "(") return(FALSE)
+  stack <- ")"
+  for (i in seq.int(3L, length(tokens))) {
+    type <- tokens[[i]]$type
+    if (type %in% c("(", "[", "{")) {
+      if (length(stack) >= 64L) return(FALSE)
+      stack <- c(stack, switch(type, "(" = ")", "[" = "]", "{" = "}"))
+    } else if (type %in% c(")", "]", "}")) {
+      if (type != tail(stack, 1L)) return(FALSE)
+      stack <- head(stack, -1L)
+      if (!length(stack)) {
+        rest <- vapply(tokens[seq.int(i + 1L, length(tokens))], `[[`, "", "type")
+        return(identical(rest, "eof") || identical(rest, c(";", "eof")))
+      }
+    } else if (type == "eof") return(FALSE)
+  }
+  FALSE
+}
+
 .jmp_literal_column_properties <- function(props, character_column) {
   # Property 7 is an inert length-prefixed JSL property expression, not code
   # to execute. Only complete literal missing-code/value-order declarations
@@ -224,7 +265,9 @@
       size <- c$num(4, TRUE)
       if (size == -1) break
       if (size < 0 || size > length(b) - c$pos) return(unknown)
-      nodes <- c(nodes, .jrp_parse(.jmp_utf8(c$take(size))))
+      text <- .jmp_utf8(c$take(size))
+      if (!.jmp_ignored_column_property(text))
+        nodes <- c(nodes, .jrp_parse(text))
     }
     if (c$pos != length(b)) return(unknown)
     names <- vapply(nodes, function(node) {

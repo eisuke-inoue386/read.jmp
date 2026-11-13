@@ -89,7 +89,7 @@
   if (is.null(result$table)) result$table <- list()
   result <- .jmp_filter_rows(result, exclude_rows)
   result$source <- list(file = basename(path), size = length(bytes),
-                        reader = "read.jmp", version = "0.5.0", backend = "base-R")
+                        reader = "read.jmp", version = "0.5.1", backend = "base-R")
   if (keep_source) result$source$bytes <- bytes
   class(result) <- "jmp_dataset"
   converted <- .jmp_analysis_result(result, FALSE, missing_codes, factors, ordinal_order)

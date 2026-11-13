@@ -7,7 +7,7 @@
 
 JMPをインストールせずに、対応する`.jmp`や限定的な`.jrp`をRに読み込みます。
 R 4.1以上が必要です。Python・Julia・追加のRパッケージは不要です。
-**0.5.0は実験版です。すべてのJMPファイル・設定には対応していません。**
+**0.5.1は実験版です。すべてのJMPファイル・設定には対応していません。**
 
 ## インストールせずに使う
 
@@ -121,8 +121,8 @@ library(read.jmp)
 result <- read.jmp("data.jmp")
 ```
 
-ローカルのソースパッケージは`read.jmp_0.5.0.tar.gz`、Windowsバイナリは
-`read.jmp_0.5.0.zip`です。`read.jmp-source.zip`はリポジトリ用ソース一式であり、
+ローカルのソースパッケージは`read.jmp_0.5.1.tar.gz`、Windowsバイナリは
+`read.jmp_0.5.1.zip`です。`read.jmp-source.zip`はリポジトリ用ソース一式であり、
 インストール用のWindowsバイナリではありません。
 
 検証は[VALIDATION.md](VALIDATION.md)、保守・公開は[PUBLISHING.md](PUBLISHING.md)を参照。

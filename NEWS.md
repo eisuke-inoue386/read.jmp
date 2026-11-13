@@ -1,3 +1,13 @@
+# read.jmp 0.5.1
+
+- Read row exclusions when bounded optional table-header blocks 1 and 15
+  precede the row-state directory. Invalid/unknown layouts still stop import.
+- In binary JMP metadata, skip complete inert Aliases, Formula and Notes
+  properties when reading missing codes and category order. Stored values
+  are used; these properties are never executed or recalculated.
+- JRP external-reference and dynamic-code rejection is unchanged.
+- Add synthetic regressions; no private input data is distributed.
+
 # read.jmp 0.5.0
 
 - Rename the package, repository and primary standalone file to read.jmp.

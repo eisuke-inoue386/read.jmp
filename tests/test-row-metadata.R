@@ -142,4 +142,59 @@ d <- as_analysis_data(temporal, exclude_rows = TRUE, missing_codes = TRUE)
 stopifnot(inherits(d[[1]], "Date"), is.na(d[[1]][1]),
           !is.na(temporal$data[[1]][2]))
 
+# Additional bounded table-header blocks must not obscure real row states.
+# Fake row-state headers inside the opaque text must never be mistaken for data.
+b <- fixture("example1.jmp")
+h <- internal(".jmp_header")(b, 1e7)
+s <- state_start(b, 4)
+b[s + seq(5, by = 8, length.out = 4)] <- as.raw(c(2, 4, 1, 0))
+baseline <- read_bytes(b)
+payload <- c(charToRaw("synthetic header"), u16(16), u64(32), raw(32))
+prefix <- c(u16(1), u32(length(payload)), payload)
+attribute <- c(u16(15), u32(4), u32(3))
+start <- h$table_header_offset
+b <- c(slice(b, 0, start), prefix, slice(b, start, 10), attribute,
+       slice(b, start + 10, length(b) - start - 10))
+delta <- length(prefix) + length(attribute)
+for (i in seq_len(h$ncols)) {
+  pos <- h$column_index_offset + delta + 4 + (i - 1) * 8
+  b[pos + 1:8] <- u64(h$offsets[i] + delta)
+}
+with_prefix <- read_bytes(b)
+stopifnot(identical(with_prefix$data, baseline$data),
+          identical(with_prefix$rows, baseline$rows),
+          identical(with_prefix$table$excluded_rows_removed, 1L))
+for (mutation in c("oversized", "wrong_fixed_size", "unknown_tag", "duplicate")) {
+  bad <- b
+  if (mutation == "oversized") bad[start + 3:6] <- u32(length(b))
+  attr_start <- start + length(prefix) + 10
+  if (mutation == "wrong_fixed_size") bad[attr_start + 3:6] <- u32(5)
+  if (mutation == "unknown_tag") bad[start + 1:2] <- u16(2)
+  if (mutation == "duplicate") bad[attr_start + 1:2] <- u16(1)
+  expect_error(read_bytes(bad), "jmp_metadata_error")
+}
+
+# Unrelated, separately framed properties may contain inert formula text.
+# Missing-code and value-order declarations still require literal parsing.
+property_sequence <- function(texts) list(list(id = 7, payload = c(
+  do.call(c, lapply(texts, function(t) c(u32(nchar(t, type = "bytes")), charToRaw(t)))),
+  u32(-1))))
+unrelated <- c('Aliases({"x", If(:x > 0, 1, 0)})',
+               'Formula(If(:x > 0, :x, .))',
+               'Notes("literal Missing Value Codes({99}) text")')
+mixed <- property_sequence(c(unrelated, "Missing Value Codes({99})", "Value Order({2, 1})"))
+m <- decode(mixed, FALSE)
+stopifnot(m$known, identical(m$missing_value_codes, 99), identical(m$value_order, c(2, 1)))
+m <- decode(property_sequence(unrelated), FALSE)
+stopifnot(m$known, is.null(m$missing_value_codes), is.null(m$value_order))
+for (text in c('Formula(If(:x > 0, 1, 0)); Missing Value Codes({99})',
+               'Notes("a"); Eval(Parse("anything"));', 'Formula([1,2})',
+               'Formula(If(:x > 0, 1, 0)', 'Notes("unterminated)',
+               'Unknown Property({99})')) {
+  stopifnot(!decode(properties(text), FALSE)$known)
+}
+# The same dynamic calls remain forbidden in JRP input.
+expect_error(internal(".jrp_parse")('New Table("x", New Column("x", Formula(If(1, 2, 3)), Values([2])))'),
+             "jrp_dynamic_error")
+
 cat("Row exclusion and literal metadata tests passed.\n")

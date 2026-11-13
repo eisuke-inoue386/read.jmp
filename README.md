@@ -9,7 +9,7 @@ Read supported JMP `.jmp` tables directly in R without JMP, Python, Julia or
 additional R packages. A restricted `.jrp` reader accepts literal embedded
 values without executing JSL. R 4.1 or newer is required.
 
-**Experimental 0.5.0.** Supported layouts are tested; this is not a universal
+**Experimental 0.5.1.** Supported layouts are tested; this is not a universal
 JMP reader or a lossless reproduction of JMP's settings. See
 [日本語の説明](README.ja.md), [validation](VALIDATION.md) and
 [publication instructions](PUBLISHING.md).
@@ -146,8 +146,8 @@ result <- read.jmp("my-data.jmp")
 ```
 
 Local source archives can be installed with
-`install.packages("read.jmp_0.5.0.tar.gz", repos = NULL, type = "source")`.
-The separately built Windows binary is `read.jmp_0.5.0.zip` (`type = "win.binary"`).
+`install.packages("read.jmp_0.5.1.tar.gz", repos = NULL, type = "source")`.
+The separately built Windows binary is `read.jmp_0.5.1.zip` (`type = "win.binary"`).
 `read.jmp-source.zip` is a source-folder archive, not an installable Windows binary.
 Package examples using `system.file(..., package = "read.jmp")` require installation.
 
@@ -155,7 +155,7 @@ Package examples using `system.file(..., package = "read.jmp")` require installa
 
 ```sh
 R CMD build .
-R CMD check --no-manual read.jmp_0.5.0.tar.gz
+R CMD check --no-manual read.jmp_0.5.1.tar.gz
 ```
 
 Tests use base R. CI checks the package and standalone file on Windows, macOS

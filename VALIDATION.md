@@ -1,7 +1,7 @@
 # Validation record
 
 Initial validation: 2026-10-21 (Asia/Tokyo).
-Publication check: 2026-11-13 (Asia/Tokyo), read.jmp 0.5.0.
+Publication check: 2026-11-13 (Asia/Tokyo), read.jmp 0.5.1.
 
 - The renamed package passes all six test scripts and `R CMD check --no-manual`.
 - `read.jmp()` matches the legacy readers for both JMP and supported JRP input.
@@ -9,6 +9,16 @@ Publication check: 2026-11-13 (Asia/Tokyo), read.jmp 0.5.0.
   byte-for-byte; legacy `jmp2r.R` remains usable without installation.
 - Standalone tests verify external-reference and dynamic-JRP rejection through
   the new `read.jmp()` entry point.
+
+## Additional binary layouts
+
+- Synthetic tests exercise optional header blocks, row filtering, misleading
+  bytes inside opaque payloads, invalid sizes and unknown header tags.
+- Mixed column-property tests preserve literal missing codes and value order
+  alongside inert Aliases/Formula/Notes; malformed and trailing calls fail.
+- A private JMP 19.1.1 table was checked locally: 137 rows, 13 columns, no
+  excluded rows; default import completed without warnings. The input and
+  its contents are not included in this repository.
 
 ## Executed locally
 

@@ -89,7 +89,7 @@
   if (is.null(result$table)) result$table <- list()
   result <- .jmp_filter_rows(result, exclude_rows)
   result$source <- list(file = basename(path), size = length(bytes),
-                        reader = "read.jmp", version = "0.6.0", backend = "base-R")
+                        reader = "read.jmp", version = "0.6.1", backend = "base-R")
   if (keep_source) result$source$bytes <- bytes
   class(result) <- "jmp_dataset"
   converted <- .jmp_analysis_result(result, FALSE, missing_codes, factors, ordinal_order, blank_as_na)
@@ -303,7 +303,8 @@ as_analysis_data <- function(x, exclude_rows = FALSE, missing_codes = FALSE,
         values[is.na(d[[i]])] <- NA
         lev <- m$value_order
         order_source <- "jmp"
-        if (!length(lev)) {
+        custom_order <- isTRUE(m$value_order_custom)
+        if (!length(lev) && !custom_order) {
           if (kind == "ordinal" && ordinal_order == "error")
             .jmp_abort(paste0("Ordinal column '", names(d)[i],
                                "' has no explicit Value Order."), "jmp_metadata_error")
@@ -327,9 +328,15 @@ as_analysis_data <- function(x, exclude_rows = FALSE, missing_codes = FALSE,
         if (anyNA(lev) || anyDuplicated(lev))
           .jmp_abort("Category levels must be unique and non-missing.", "jmp_metadata_error")
         observed <- unique(values[!is.na(values)])
-        if (any(!observed %in% lev))
-          .jmp_abort(paste0("Value Order omits observed values in column '", names(d)[i], "'."),
-                     "jmp_metadata_error")
+        unlisted <- setdiff(observed, lev)
+        if (length(unlisted)) {
+          if (!custom_order)
+            .jmp_abort(paste0("Value Order omits observed values in column '", names(d)[i], "'."),
+                       "jmp_metadata_error")
+          # JMP Custom Order puts listed values first and sorts the rest.
+          lev <- c(lev, sort(unlisted))
+          order_source <- "jmp_custom_r_sort"
+        }
         labels <- as.character(lev)
         vl <- m$value_labels
         if (length(vl)) {

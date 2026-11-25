@@ -309,7 +309,7 @@
   # Binary tables already contain stored values. These unrelated properties
   # need not be evaluated or understood to read missing codes/value order.
   # Require one complete, balanced outer call; never ignore trailing calls.
-  tokens <- .jrp_lex(text)
+  tokens <- .jrp_lex(text, allow_opaque = TRUE)
   if (length(tokens) < 4L || tokens[[1]]$type != "ident" ||
       !.jrp_name(tokens[[1]]$value) %in% c("aliases", "formula", "notes") ||
       tokens[[2]]$type != "(") return(FALSE)
@@ -331,6 +331,17 @@
   FALSE
 }
 
+.jmp_property_values <- function(node, character_column) {
+  if (!node$kind %in% c("list", "matrix"))
+    .jmp_corrupt("Expected a literal list of column property values.")
+  value <- .jrp_literal(node)
+  if (!length(value)) return(NULL)
+  if (anyNA(value) || (character_column && !is.character(value)) ||
+      (!character_column && !is.numeric(value)))
+    .jmp_corrupt("Invalid literal column property values.")
+  value
+}
+
 .jmp_literal_column_properties <- function(props, character_column) {
   # Property 7 is an inert length-prefixed JSL property expression, not code
   # to execute. Only complete literal missing-code/value-order declarations
@@ -338,20 +349,32 @@
   unknown <- list(known = FALSE)
   if (is.null(props)) return(unknown)
   found <- Filter(function(p) p$id == 7, props)
-  empty <- list(known = TRUE, missing_value_codes = NULL, value_order = NULL)
+  empty <- list(known = TRUE, missing_value_codes = NULL, value_order = NULL,
+                value_order_custom = FALSE)
   if (!length(found)) return(empty)
   if (length(found) != 1L) return(unknown)
   tryCatch({
     b <- found[[1]]$payload
     c <- .jmp_cursor(b)
     nodes <- list()
+    localized_order <- NULL
+    # Some Japanese tables include a second, quoted copy of Custom Order.
+    # Parse it as an ordinary literal list and require the two copies to agree.
+    localized_prefix <- "^[[:space:]]*\"\u5024\u306e\u9806\u5e8f\"[[:space:]]*\\("
     repeat {
       size <- c$num(4, TRUE)
       if (size == -1) break
       if (size < 0 || size > length(b) - c$pos) return(unknown)
       text <- .jmp_utf8(c$take(size))
-      if (!.jmp_ignored_column_property(text))
+      if (grepl(localized_prefix, text)) {
+        if (!is.null(localized_order)) return(unknown)
+        parsed <- .jrp_parse(sub(localized_prefix, "Value Order(", text))
+        if (length(parsed) != 1L || parsed[[1L]]$kind != "call" ||
+            length(parsed[[1L]]$args) != 1L) return(unknown)
+        localized_order <- parsed[[1L]]$args[[1L]]
+      } else if (!.jmp_ignored_column_property(text)) {
         nodes <- c(nodes, .jrp_parse(text))
+      }
     }
     if (c$pos != length(b)) return(unknown)
     names <- vapply(nodes, function(node) {
@@ -362,13 +385,23 @@
     out <- empty
     for (i in seq_along(nodes)) {
       node <- nodes[[i]]
-      if (length(node$args) != 1L || !node$args[[1]]$kind %in% c("list", "matrix")) return(unknown)
-      value <- .jrp_literal(node$args[[1]])
-      if (!length(value)) value <- NULL
-      else if (anyNA(value) || (character_column && !is.character(value)) ||
-               (!character_column && !is.numeric(value))) return(unknown)
-      out[[if (names[i] == "missingvaluecodes") "missing_value_codes" else "value_order"]] <- value
+      if (length(node$args) != 1L) return(unknown)
+      values <- node$args[[1L]]
+      if (names[i] == "valueorder" && values$kind == "list" && length(values$args) == 1L) {
+        descriptor <- values$args[[1L]]
+        if (descriptor$kind == "call" && .jrp_name(descriptor$value) == "customorder") {
+          if (length(descriptor$args) != 1L) return(unknown)
+          values <- descriptor$args[[1L]]
+          out$value_order_custom <- TRUE
+        }
+      }
+      field <- if (names[i] == "missingvaluecodes") "missing_value_codes" else "value_order"
+      out[field] <- list(.jmp_property_values(values, character_column))
     }
+    if (!is.null(localized_order) &&
+        (!out$value_order_custom ||
+         !identical(out$value_order, .jmp_property_values(localized_order, character_column))))
+      return(unknown)
     out
   }, error = function(e) unknown)
 }
@@ -642,6 +675,7 @@
   if (isTRUE(literal$known)) {
     meta$missing_value_codes <- literal$missing_value_codes
     meta$value_order <- literal$value_order
+    if (literal$value_order_custom) meta$value_order_custom <- TRUE
     meta$metadata_known$missing_value_codes <- TRUE
     meta$metadata_known$value_order <- TRUE
   }
@@ -649,7 +683,8 @@
     extra <- c(extra, "Modeling type is unavailable or unsupported; it was not inferred from storage type.")
   if (!meta$metadata_known$missing_value_codes)
     extra <- c(extra, "Missing-value definitions and value order could not be fully interpreted; no absence was assumed.")
-  if (identical(meta$modeling_type, "Ordinal") && !length(meta$value_order))
+  if (identical(meta$modeling_type, "Ordinal") &&
+      !length(meta$value_order) && !isTRUE(meta$value_order_custom))
     extra <- c(extra, "Ordinal modeling type is retained, but category order is not explicit; see the ordinal_order conversion option.")
   list(values = v, metadata = meta, messages = extra)
 }
@@ -689,7 +724,7 @@
   .jmp_abort(message, subclass = subclass)
 }
 
-.jrp_lex <- function(text) {
+.jrp_lex <- function(text, allow_opaque = FALSE) {
   n <- nchar(text, type = "chars")
   if (n > 16000000L) .jrp_error("JRP text exceeds the 16 million character limit.", "jmp_resource_error")
   z <- strsplit(text, "", fixed = TRUE)[[1L]]
@@ -761,6 +796,12 @@
     }
     if (c %in% strsplit("()[]{},;=.+-*/:^<>!|&", "", fixed = TRUE)[[1L]]) {
       emit(c, c, i, i)
+      i <- i + 1L
+      next
+    }
+    # Used only to balance ignored binary property text. JRP parsing is strict.
+    if (allow_opaque) {
+      emit("opaque", c, i, i)
       i <- i + 1L
       next
     }
@@ -1132,7 +1173,7 @@
   if (is.null(result$table)) result$table <- list()
   result <- .jmp_filter_rows(result, exclude_rows)
   result$source <- list(file = basename(path), size = length(bytes),
-                        reader = "read.jmp", version = "0.6.0", backend = "base-R")
+                        reader = "read.jmp", version = "0.6.1", backend = "base-R")
   if (keep_source) result$source$bytes <- bytes
   class(result) <- "jmp_dataset"
   converted <- .jmp_analysis_result(result, FALSE, missing_codes, factors, ordinal_order, blank_as_na)
@@ -1346,7 +1387,8 @@ as_analysis_data <- function(x, exclude_rows = FALSE, missing_codes = FALSE,
         values[is.na(d[[i]])] <- NA
         lev <- m$value_order
         order_source <- "jmp"
-        if (!length(lev)) {
+        custom_order <- isTRUE(m$value_order_custom)
+        if (!length(lev) && !custom_order) {
           if (kind == "ordinal" && ordinal_order == "error")
             .jmp_abort(paste0("Ordinal column '", names(d)[i],
                                "' has no explicit Value Order."), "jmp_metadata_error")
@@ -1370,9 +1412,15 @@ as_analysis_data <- function(x, exclude_rows = FALSE, missing_codes = FALSE,
         if (anyNA(lev) || anyDuplicated(lev))
           .jmp_abort("Category levels must be unique and non-missing.", "jmp_metadata_error")
         observed <- unique(values[!is.na(values)])
-        if (any(!observed %in% lev))
-          .jmp_abort(paste0("Value Order omits observed values in column '", names(d)[i], "'."),
-                     "jmp_metadata_error")
+        unlisted <- setdiff(observed, lev)
+        if (length(unlisted)) {
+          if (!custom_order)
+            .jmp_abort(paste0("Value Order omits observed values in column '", names(d)[i], "'."),
+                       "jmp_metadata_error")
+          # JMP Custom Order puts listed values first and sorts the rest.
+          lev <- c(lev, sort(unlisted))
+          order_source <- "jmp_custom_r_sort"
+        }
         labels <- as.character(lev)
         vl <- m$value_labels
         if (length(vl)) {

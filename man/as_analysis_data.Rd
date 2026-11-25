@@ -40,7 +40,9 @@ effective R levels in the returned metadata. Repeated conversion of imported
 data uses preserved codes and does not reinterpret labels as original codes.
 Stored value
 labels are used as factor labels, but duplicate labels that would merge different
-codes cause an error. Value Order must include every observed non-missing value.
+codes cause an error. Flat Value Order must include every observed non-missing
+value. Binary JMP Custom Order lists can be partial. Unlisted observed values
+are added after the declared values using R's standard sort order.
 Ordinary R modeling functions do not honor JMP metadata on their own.
 }
 \examples{

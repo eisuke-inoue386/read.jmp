@@ -177,17 +177,17 @@ for (mutation in c("oversized", "wrong_fixed_size", "unknown_tag", "duplicate"))
 # Unrelated, separately framed properties may contain inert formula text.
 # Missing-code and value-order declarations still require literal parsing.
 property_sequence <- function(texts) list(list(id = 7, payload = c(
-  do.call(c, lapply(texts, function(t) c(u32(nchar(t, type = "bytes")), charToRaw(t)))),
+  do.call(c, lapply(enc2utf8(texts), function(t) c(u32(nchar(t, type = "bytes")), charToRaw(t)))),
   u32(-1))))
 unrelated <- c('Aliases({"x", If(:x > 0, 1, 0)})',
-               'Formula(If(:x > 0, :x, .))',
+               'Formula(If(:x\u2605 > 0, :x, .))',
                'Notes("literal Missing Value Codes({99}) text")')
 mixed <- property_sequence(c(unrelated, "Missing Value Codes({99})", "Value Order({2, 1})"))
 m <- decode(mixed, FALSE)
 stopifnot(m$known, identical(m$missing_value_codes, 99), identical(m$value_order, c(2, 1)))
 m <- decode(property_sequence(unrelated), FALSE)
 stopifnot(m$known, is.null(m$missing_value_codes), is.null(m$value_order))
-for (text in c('Formula(If(:x > 0, 1, 0)); Missing Value Codes({99})',
+for (text in c('Formula(If(:x\u2605 > 0, 1, 0)); Missing Value Codes({99})',
                'Notes("a"); Eval(Parse("anything"));', 'Formula([1,2})',
                'Formula(If(:x > 0, 1, 0)', 'Notes("unterminated)',
                'Unknown Property({99})')) {
@@ -196,5 +196,51 @@ for (text in c('Formula(If(:x > 0, 1, 0)); Missing Value Codes({99})',
 # The same dynamic calls remain forbidden in JRP input.
 expect_error(internal(".jrp_parse")('New Table("x", New Column("x", Formula(If(1, 2, 3)), Values([2])))'),
              "jrp_dynamic_error")
+
+# JMP writes a wrapped custom order and can also store a matching localized
+# list. Only matching literals can accompany the canonical property.
+custom <- 'Value Order({Custom Order({"dd", "b"})})'
+localized <- '"\u5024\u306e\u9806\u5e8f"({"dd", "b"})'
+codes <- 'Missing Value Codes({"b"})'
+for (expressions in list(custom, c(custom, localized), c(localized, custom))) {
+  m <- decode(property_sequence(c(expressions, codes, unrelated)), TRUE)
+  stopifnot(m$known, isTRUE(m$value_order_custom),
+            identical(m$value_order, c("dd", "b")),
+            identical(m$missing_value_codes, "b"))
+}
+for (expressions in list(c(custom, '"\u5024\u306e\u9806\u5e8f"({"b", "dd"})'),
+                         'Value Order({Custom Order({Eval(Parse("x"))})})',
+                         'Value Order({Custom Order({"dd"}), Row Order Levels(1)})')) {
+  stopifnot(!decode(property_sequence(expressions), TRUE)$known)
+}
+
+# Splice property records into a public JMP fixture to exercise actual import.
+read_compact_order <- function(expressions) {
+  bytes <- fixture("compact.jmp")
+  header <- internal(".jmp_header")(bytes, 1e7)
+  cursor <- internal(".jmp_cursor")(bytes, header$offsets[1])
+  invisible(cursor$str(2))
+  cursor$skip(6)
+  props <- internal(".jmp_properties")(bytes, cursor$pos, header$offsets[2], 4)
+  stopifnot(length(props) == 0L)
+  start <- cursor$pos + 4
+  end <- attr(props, "end_offset")
+  payload <- property_sequence(expressions)[[1]]$payload
+  block <- c(u16(1), u64(10 + length(payload)), u16(7), u64(length(payload)), payload)
+  bytes <- c(slice(bytes, 0, start), block, slice(bytes, end, length(bytes) - end))
+  delta <- length(block) - (end - start)
+  for (i in 2:header$ncols) {
+    pos <- header$column_index_offset + 4 + (i - 1) * 8
+    bytes[pos + 1:8] <- u64(header$offsets[i] + delta)
+  }
+  path <- tempfile(fileext = ".jmp")
+  on.exit(unlink(path))
+  writeBin(bytes, path)
+  withCallingHandlers(read.jmp::read.jmp(path), warning = function(w) stop(w))
+}
+d <- read_compact_order(c(custom, localized, codes, unrelated))
+stopifnot(identical(as.character(d$normalsubtype), c("aa", NA, "ccc", "dd", "dd")),
+          identical(levels(d$normalsubtype), c("dd", "aa", "ccc")))
+expect_error(read_compact_order('Value Order({"dd"})'), "jmp_metadata_error")
 
 cat("Row exclusion and literal metadata tests passed.\n")

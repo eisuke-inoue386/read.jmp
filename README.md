@@ -9,7 +9,7 @@ Read supported JMP `.jmp` tables directly in R without JMP, Python, Julia or
 additional R packages. A restricted `.jrp` reader accepts literal embedded
 values without executing JSL. R 4.1 or newer is required.
 
-**Experimental 0.6.0.** Supported layouts are tested; this is not a universal
+**Experimental 0.6.1.** Supported layouts are tested; this is not a universal
 JMP reader or a lossless reproduction of JMP's settings. See
 [日本語の説明](README.ja.md), [validation](VALIDATION.md) and
 [publication instructions](PUBLISHING.md).
@@ -55,7 +55,9 @@ raw <- read.jmp("my-data.jmp", exclude_rows = FALSE,
   declared missing codes still follow `missing_codes`.
 - Missing codes become `NA` before factor conversion and are not kept as factor
   levels when conversion is enabled. Supported value labels become factor labels.
-- Explicit JMP category order takes precedence. Otherwise ordinal columns use
+- Explicit JMP category order takes precedence. For binary JMP Custom Order,
+  unlisted observed levels follow the declared levels in R sort order.
+  Otherwise ordinal columns without a declared order use
   `ordinal_order = "sort"`: numeric ascending order and R's locale-dependent
   character order. This fallback is recorded in import diagnostics.
 - `ordinal_order = "error"` requires declared order; `"appearance"` uses first
@@ -153,8 +155,8 @@ result <- read.jmp("my-data.jmp")
 ```
 
 Local source archives can be installed with
-`install.packages("read.jmp_0.6.0.tar.gz", repos = NULL, type = "source")`.
-The separately built Windows binary is `read.jmp_0.6.0.zip` (`type = "win.binary"`).
+`install.packages("read.jmp_0.6.1.tar.gz", repos = NULL, type = "source")`.
+The separately built Windows binary is `read.jmp_0.6.1.zip` (`type = "win.binary"`).
 `read.jmp-source.zip` is a source-folder archive, not an installable Windows binary.
 Package examples using `system.file(..., package = "read.jmp")` require installation.
 
@@ -162,7 +164,7 @@ Package examples using `system.file(..., package = "read.jmp")` require installa
 
 ```sh
 R CMD build .
-R CMD check --no-manual read.jmp_0.6.0.tar.gz
+R CMD check --no-manual read.jmp_0.6.1.tar.gz
 ```
 
 Tests use base R. CI checks the package and standalone file on Windows, macOS

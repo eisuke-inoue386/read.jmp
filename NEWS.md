@@ -1,3 +1,10 @@
+# read.jmp 0.6.1
+
+- Read literal JMP Custom Order settings, including matching Japanese
+  duplicates. Keep listed levels first and sort observed unlisted levels in R.
+- Recognize additional characters in ignored binary formula text without
+  executing formulas or changing the accepted JRP syntax.
+
 # read.jmp 0.6.0
 
 - Add `blank_as_na = TRUE` to readers, independently controlling conversion of

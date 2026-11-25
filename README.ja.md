@@ -7,7 +7,7 @@
 
 JMPをインストールせずに、対応する`.jmp`や限定的な`.jrp`をRに読み込みます。
 R 4.1以上が必要です。Python・Julia・追加のRパッケージは不要です。
-**0.6.0は実験版です。すべてのJMPファイル・設定には対応していません。**
+**0.6.1は実験版です。すべてのJMPファイル・設定には対応していません。**
 
 ## インストールせずに使う
 
@@ -55,7 +55,8 @@ result <- read.jmp(
 変換に必要な情報が読めない場合は、推測せずエラーにします。
 `metadata = "quiet"`は、このエラーを無視する指定ではありません。
 
-順序尺度は、JMPで指定したカテゴリ順を優先します。未指定なら
+JMPで指定したカテゴリ順を優先します。「カスタム順序」で指定されていない値は、
+指定済みの値の後ろにRの標準順で追加します。順序尺度で順序が未指定なら
 `ordinal_order = "sort"`でRの標準順を使い、診断情報に記録します。
 数値は昇順、文字列の順はRのロケールに依存します。
 `ordinal_order = "error"`なら未指定時にエラー、`"appearance"`なら出現順にできます。
@@ -129,8 +130,8 @@ library(read.jmp)
 result <- read.jmp("data.jmp")
 ```
 
-ローカルのソースパッケージは`read.jmp_0.6.0.tar.gz`、Windowsバイナリは
-`read.jmp_0.6.0.zip`です。`read.jmp-source.zip`はリポジトリ用ソース一式であり、
+ローカルのソースパッケージは`read.jmp_0.6.1.tar.gz`、Windowsバイナリは
+`read.jmp_0.6.1.zip`です。`read.jmp-source.zip`はリポジトリ用ソース一式であり、
 インストール用のWindowsバイナリではありません。
 
 検証は[VALIDATION.md](VALIDATION.md)、保守・公開は[PUBLISHING.md](PUBLISHING.md)を参照。

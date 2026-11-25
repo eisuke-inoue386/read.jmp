@@ -8,7 +8,7 @@
   .jmp_abort(message, subclass = subclass)
 }
 
-.jrp_lex <- function(text) {
+.jrp_lex <- function(text, allow_opaque = FALSE) {
   n <- nchar(text, type = "chars")
   if (n > 16000000L) .jrp_error("JRP text exceeds the 16 million character limit.", "jmp_resource_error")
   z <- strsplit(text, "", fixed = TRUE)[[1L]]
@@ -80,6 +80,12 @@
     }
     if (c %in% strsplit("()[]{},;=.+-*/:^<>!|&", "", fixed = TRUE)[[1L]]) {
       emit(c, c, i, i)
+      i <- i + 1L
+      next
+    }
+    # Used only to balance ignored binary property text. JRP parsing is strict.
+    if (allow_opaque) {
+      emit("opaque", c, i, i)
       i <- i + 1L
       next
     }
